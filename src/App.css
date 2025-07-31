@@ -1,3 +1,4 @@
+
 * {
   margin: 0;
   padding: 0;
@@ -100,4 +101,23 @@ form {
   height: 20px;
   margin-right: 8px;
   vertical-align: middle;
+}
+
+.passwordWrapper {
+  position: relative;
+}
+
+.passwordWrapper input {
+  width: 100%;
+  padding-right: 40px; 
+}
+
+.passwordIcon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
 }
