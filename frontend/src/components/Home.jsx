@@ -1,26 +1,63 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ReactLogo from "../assets/react.svg";
 import SettingsIcon from "../assets/settings.svg";
 
 const Home = () => {
-  let chats = [];
-  for (let i = 0; i < 100; i++) {
-    chats.push(
-      <div className="chat chat-start">
-        <div className="chat-image avatar">
-          <div className="w-10 rounded-full">
-            <img
-              alt="Tailwind CSS chat bubble component"
-              src="https://img.daisyui.com/images/profile/demo/kenobee@192.webp"
-            />
-          </div>
-        </div>
-        <div className="chat-bubble">
-          It was said that you would, destroy the Sith, not join them.
-        </div>
-      </div>
-    );
-  }
+  const [chats, setChats] = useState([]);
+  const [input, setInput] = useState("");
+  const chatContainerRef = useRef(null);
+
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (input.trim() === "") return;
+
+    const userInput = input;
+    setChats((prevChats) => [
+      ...prevChats,
+      { text: userInput, sender: "user" },
+    ]);
+    setInput("");
+
+    try {
+      const response = await fetch("http://localhost:3001/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userInput }),
+      });
+      const backendResponse = await response.json();
+
+      setChats((prevChats) => [
+        ...prevChats,
+        { text: backendResponse.reply, sender: "ai" },
+      ]);
+    } catch (error) {
+      console.error("Failed to fetch from backend:", error);
+      setChats((prevChats) => [
+        ...prevChats,
+        { text: "Error: Could not connect to the server.", sender: "ai" },
+      ]);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chats]);
+
   return (
     <div className="bg-offBlack w-screen h-screen flex">
       {/* left side */}
@@ -51,13 +88,55 @@ const Home = () => {
 
         <div className="flex flex-col flex-1 bg-darkBlack overflow-auto pl-[10%] pr-[10%] pb-[2%]">
           {/* chat start */}
-          <div className="overflow-auto">{chats}</div>
-          {/* chat end */}
 
+          <div
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto p-4 space-y-4"
+          >
+            {chats.length === 0 ? (
+              <div className="flex justify-center items-center h-full">
+                <p className="text-gray-400">Ask anything to get started!</p>
+              </div>
+            ) : (
+              chats.map((chat, index) => (
+                <div
+                  key={index}
+                  className={`chat ${
+                    chat.sender === "user" ? "chat-end" : "chat-start"
+                  }`}
+                >
+                  <div className="chat-image avatar">
+                    <div className="w-10 rounded-full">
+                      <img
+                        alt="Chat bubble avatar"
+                        src={
+                          chat.sender === "user"
+                            ? "https://placehold.co/192x192/a1a1aa/ffffff?text=You"
+                            : "https://img.daisyui.com/images/profile/demo/kenobee@192.webp"
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div
+                    className={`chat-bubble ${
+                      chat.sender === "user" ? "bg-offBlack" : ""
+                    }`}
+                  >
+                    {chat.text}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* chat end */}
           <div className="pt-2">
             <textarea
               className="border border-lightPurple focus:outline-none w-full h-[100px] p-[10px] rounded-lg bg-darkBlack resize-none"
               placeholder="Ask anything"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
             ></textarea>
           </div>
         </div>
