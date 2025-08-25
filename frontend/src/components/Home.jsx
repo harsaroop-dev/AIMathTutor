@@ -20,7 +20,7 @@ const Home = () => {
     const userInput = input;
     setChats((prevChats) => [
       ...prevChats,
-      { text: userInput, sender: "user" },
+      { type: "text", content: userInput, sender: "user" },
     ]);
     setInput("");
 
@@ -32,17 +32,32 @@ const Home = () => {
         },
         body: JSON.stringify({ message: userInput }),
       });
+
       const backendResponse = await response.json();
 
-      setChats((prevChats) => [
-        ...prevChats,
-        { text: backendResponse.reply, sender: "ai" },
-      ]);
+      if (backendResponse.reply) {
+        setChats((prevChats) => [
+          ...prevChats,
+          { type: "text", content: backendResponse.reply, sender: "ai" },
+        ]);
+      }
+
+      if (backendResponse.videoUrl) {
+        const fullVideoUrl = `http://localhost:3001${backendResponse.videoUrl}`;
+        setChats((prevChats) => [
+          ...prevChats,
+          { type: "video", url: fullVideoUrl, sender: "ai" },
+        ]);
+      }
     } catch (error) {
       console.error("Failed to fetch from backend:", error);
       setChats((prevChats) => [
         ...prevChats,
-        { text: "Error: Could not connect to the server.", sender: "ai" },
+        {
+          type: "text",
+          content: "Error: Could not connect to the server.",
+          sender: "ai",
+        },
       ]);
     }
   };
@@ -122,7 +137,14 @@ const Home = () => {
                       chat.sender === "user" ? "bg-offBlack" : ""
                     }`}
                   >
-                    {chat.text}
+                    {chat.type === "text" ? (
+                      <p>{chat.content}</p>
+                    ) : chat.type === "video" ? (
+                      <video width="480" controls autoPlay muted loop>
+                        <source src={chat.url} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
+                    ) : null}
                   </div>
                 </div>
               ))

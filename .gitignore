@@ -13,6 +13,8 @@
 .env.*
 /frontend/.env
 /backend/.env
+/backend/public/
+/backend/__pycache__/
 
 # Production build folder from frontend
 /frontend/dist
