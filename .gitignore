@@ -47,5 +47,8 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-/backend/manim-script/*.py
+/backend/manim-script
 
+/media
+
+/backend/JSON.json
